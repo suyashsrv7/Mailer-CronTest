@@ -1,4 +1,4 @@
-#Mailer Service
+# Mailer Service
 
 ### Objectives
 - Upload a csv containg mailing list of users with respective messages to mail.
