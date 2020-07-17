@@ -1,5 +1,6 @@
 package com.project.mailer.controller;
 
+import com.project.mailer.dto.MailsListDTO;
 import com.project.mailer.dto.TrackingIdDTO;
 import com.project.mailer.model.Mails;
 import com.project.mailer.service.MailerService;
@@ -27,6 +28,16 @@ public class MailController {
     @RequestMapping(value = "/mail-info/{trackingId}", method = RequestMethod.GET)
     public DeferredResult<Mails> mailListUpload(@PathVariable long trackingId) throws IOException {
         return getDeferredResult(mailService.getMailInfoByTrackingId(trackingId).toCompletableFuture());
+    }
+
+    @RequestMapping(value = "/mail/{trackingId}/send", method = RequestMethod.GET)
+    public DeferredResult<Mails> sendMail(@PathVariable long trackingId) {
+        return getDeferredResult(mailService.sendMailByTrackingId(trackingId).toCompletableFuture());
+    }
+
+    @RequestMapping(value = "/mails", method = RequestMethod.GET)
+    public DeferredResult<MailsListDTO> fetchAllMails() {
+        return getDeferredResult(mailService.getAllMails().toCompletableFuture());
     }
 
 
