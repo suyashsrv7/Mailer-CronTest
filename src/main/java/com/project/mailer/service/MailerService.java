@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -60,28 +61,38 @@ public class MailerService {
         return CompletableFuture.completedFuture(mailsListDTO);
     }
 
-    public void sendMail(Mails mailToSend) {
+    public Mails sendMail(Mails mailToSend) {
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
         simpleMailMessage.setTo(mailToSend.getRecepientEmail());
         simpleMailMessage.setSubject("Test Mail");
         simpleMailMessage.setText(mailToSend.getMessage());
         javaMailSender.send(simpleMailMessage);
+        return updateMailStatus(mailToSend);
     }
 
     public CompletionStage<Mails> sendMailByTrackingId(Long trackingId) {
         return getMailInfoByTrackingId(trackingId)
                 .thenCompose(mailToSend -> {
-                    sendMail(mailToSend);
-                    return CompletableFuture.completedFuture(mailToSend);
-                })
-                .thenCompose(mailSent -> {
-                    mailSent.setModifiedAt(new Timestamp(System.currentTimeMillis()));
-                    mailSent.setMailStatus(Status.COMPLETED);
-                    return CompletableFuture.completedFuture(mailRepository.save(mailSent));
+                    return CompletableFuture.completedFuture(sendMail(mailToSend));
                 });
     }
 
+    public void startMailCron() {
+        getAllMails().thenCompose(mailingList -> {
+            mailingList.getAllMails().stream()
+                    .filter(mail -> mail.getMailStatus() != Status.COMPLETED)
+                    .forEach(mail -> {
+                CompletableFuture.runAsync(() -> sendMail(mail));
+            });
+            return CompletableFuture.completedFuture(null);
+        });
+    }
 
+    public Mails updateMailStatus(Mails mailSent) {
+        mailSent.setModifiedAt(new Timestamp(System.currentTimeMillis()));
+        mailSent.setMailStatus(Status.COMPLETED);
+        return mailRepository.save(mailSent);
+    }
 
     public Mails buildNewMailingRequest(MailTaskDTO mailRequest) {
         return new Mails().builder()
