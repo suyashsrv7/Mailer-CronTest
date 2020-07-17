@@ -13,16 +13,17 @@ import javax.persistence.*;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name="MAILS")
+
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name="MAILS")
 public class Mails {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "tracking_id")
-    private long trackingId;
+    private Long trackingId;
 
     @Column(name = "recepient_email")
     private String recepientEmail;
